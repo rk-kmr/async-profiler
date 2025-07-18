@@ -118,7 +118,7 @@ static const Multiplier UNIVERSAL[] = {{'n', 1}, {'u', 1000}, {'m', 1000000}, {'
 // It is possible to specify multiple dump options at the same time
 
 Error Arguments::parse(const char* args) {
-    fprintf(stderr, "Arguments::parse");
+    fprintf(stderr, "Arguments::parse\n");
     if (args == NULL) {
         return Error::OK;
     }
@@ -134,7 +134,7 @@ Error Arguments::parse(const char* args) {
     const char* msg = NULL;
 
     // todo: cleanup later
-    fprintf(stderr, "Arguments::parse %s", args);
+    fprintf(stderr, "Arguments::parse %s\n", args);
 
     for (char* arg = strtok(args_copy, ","); arg != NULL; arg = strtok(NULL, ",")) {
         char* value = strchr(arg, '=');
