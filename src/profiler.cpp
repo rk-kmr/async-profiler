@@ -1301,8 +1301,7 @@ Error Profiler::stop(bool restart) {
     if (_event_mask & EM_LOCK) lock_tracer.stop();
     if (_event_mask & EM_ALLOC) _alloc_engine->stop();
     if (_event_mask & EM_NATIVEMEM) malloc_tracer.stop();
-    // todo: uncomment
-    //    if (_event_mask & EM_PROC) proc_tracer.stop();
+    if (_event_mask & EM_PROC) proc_recorder.stop();
 
     _engine->stop();
 
