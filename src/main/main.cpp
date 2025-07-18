@@ -4,6 +4,7 @@
  */
 
 #include <alloca.h>
+#include <cstdio>
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -44,7 +45,7 @@ static const char USAGE_STRING[] =
     "  collect           collect profile for the specified period of time\n"
     "                    and then stop (default action)\n"
     "Options:\n"
-    "  -e event          profiling event: cpu|alloc|nativemem|lock|cache-misses etc.\n"
+    "  -e event          profiling event: cpu|alloc|nativemem|lock|proc|cache-misses etc.\n"
     "  -d duration       run profiling for <duration> seconds\n"
     "  -f filename       dump output to <filename>\n"
     "  -i interval       sampling interval in nanoseconds\n"
@@ -74,9 +75,10 @@ static const char USAGE_STRING[] =
     "  --nativemem bytes native allocation profiling interval in bytes\n"
     "  --nofree          do not collect free calls in native allocation profiling\n"
     "  --lock duration   lock profiling threshold in nanoseconds\n"
+    "  --proc            enable process profiling\n"
     "  --wall interval   wall clock profiling interval\n"
     "  --all             shorthand for enabling cpu, wall, alloc, live,\n"
-    "                    nativemem and lock profiling simultaneously\n"
+    "                    nativemem, process and lock profiling simultaneously\n"
     "  --total           accumulate the total value (time, bytes, etc.)\n"
     "  --all-user        only include user-mode events\n"
     "  --sched           group threads by scheduling policy\n"
@@ -356,6 +358,8 @@ static void run_fdtransfer(int pid, String& fdtransfer) {
 }
 
 static void run_jattach(int pid, String& cmd) {
+    // todo: clean this later.
+    fprintf(stderr, "Trace: run_jattach %s \n", cmd.str());
     pid_t child = fork();
     if (child == -1) {
         error("fork failed", errno);
@@ -499,7 +503,8 @@ int main(int argc, const char** argv) {
             format << "," << (arg.str() + 2) << "=" << args.next();
 
         } else if (arg == "--reverse" || arg == "--inverted" || arg == "--samples" || arg == "--total" ||
-                   arg == "--sched" || arg == "--live" || arg == "--nofree" || arg == "--record-cpu") {
+                   arg == "--sched" || arg == "--live" || arg == "--nofree" || arg == "--record-cpu" ||
+                   arg == "--proc") {
             format << "," << (arg.str() + 2);
 
         } else if (arg == "--alloc" || arg == "--nativemem" || arg == "--lock" || arg == "--wall" ||

@@ -119,6 +119,7 @@ static int write_command(int fd, int argc, char** argv) {
         }
         p += (size_t)bytes;
     }
+
     return 0;
 }
 
