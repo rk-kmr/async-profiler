@@ -21,6 +21,7 @@ const char* const EVENT_LOCK       = "lock";
 const char* const EVENT_WALL       = "wall";
 const char* const EVENT_CTIMER     = "ctimer";
 const char* const EVENT_ITIMER     = "itimer";
+const char *const EVENT_PROC       = "proc";
 
 #define SHORT_ENUM __attribute__((__packed__))
 
@@ -166,6 +167,7 @@ class Arguments {
     long _nativemem;
     long _lock;
     long _wall;
+    long _proc;
     bool _all;
     int _jstackdepth;
     int _signal;
@@ -224,6 +226,7 @@ class Arguments {
         _nativemem(-1),
         _lock(-1),
         _wall(-1),
+        _proc(-1),
         _all(false),
         _jstackdepth(DEFAULT_JSTACKDEPTH),
         _signal(0),
