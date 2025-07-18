@@ -4,6 +4,7 @@
  */
 
 #include <algorithm>
+#include <cstdio>
 #include <dlfcn.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -19,6 +20,7 @@
 #include "mallocTracer.h"
 #include "lockTracer.h"
 #include "wallClock.h"
+#include "proc_recorder.h"
 #include "j9ObjectSampler.h"
 #include "j9StackTraces.h"
 #include "j9WallClock.h"
@@ -54,6 +56,7 @@ static PerfEvents perf_events;
 static AllocTracer alloc_tracer;
 static MallocTracer malloc_tracer;
 static LockTracer lock_tracer;
+static ProcRecorder proc_recorder;
 static ObjectSampler object_sampler;
 static J9ObjectSampler j9_object_sampler;
 static WallClock wall_clock;
@@ -61,7 +64,6 @@ static J9WallClock j9_wall_clock;
 static CTimer ctimer;
 static ITimer itimer;
 static Instrument instrument;
-
 static ProfilingWindow profiling_window;
 
 
@@ -72,6 +74,7 @@ enum EventMask {
     EM_LOCK  = 4,
     EM_WALL  = 8,
     EM_NATIVEMEM = 16,
+    EM_PROC  = 32,
 };
 
 
@@ -995,6 +998,8 @@ bool Profiler::excludeTrace(FrameName* fn, CallTrace* trace) {
 }
 
 Engine* Profiler::selectEngine(const char* event_name) {
+    fprintf(stderr, "selectEngine %s\n", event_name);
+
     if (event_name == NULL) {
         return &noop_engine;
     } else if (strcmp(event_name, EVENT_CPU) == 0) {
@@ -1073,6 +1078,8 @@ Error Profiler::checkJvmCapabilities() {
 }
 
 Error Profiler::start(Arguments& args, bool reset) {
+    fprintf(stderr, "Profiler::start %s\n", args._event);
+
     MutexLocker ml(_state_lock);
     if (_state > IDLE) {
         return Error("Profiler already started");
@@ -1092,7 +1099,8 @@ Error Profiler::start(Arguments& args, bool reset) {
                   (args._alloc >= 0 ? EM_ALLOC : 0) |
                   (args._lock >= 0 ? EM_LOCK : 0) |
                   (args._wall >= 0 ? EM_WALL : 0) |
-                  (args._nativemem >= 0 ? EM_NATIVEMEM : 0);
+                  (args._nativemem >= 0 ? EM_NATIVEMEM : 0) |
+                  (args._proc >= 0 ? EM_PROC : 0);
 
     if (_event_mask == 0) {
         return Error("No profiling events specified");
@@ -1236,6 +1244,12 @@ Error Profiler::start(Arguments& args, bool reset) {
             goto error5;
         }
     }
+    if (_event_mask & EM_PROC) {
+      error = proc_recorder.start(args);
+      if (error) {
+        goto error6;
+      }
+    }
 
     switchThreadEvents(JVMTI_ENABLE);
 
@@ -1249,7 +1263,8 @@ Error Profiler::start(Arguments& args, bool reset) {
     }
 
     return Error::OK;
-
+error6:
+    if (_event_mask & EM_PROC) proc_recorder.stop();
 error5:
     if (_event_mask & EM_NATIVEMEM) malloc_tracer.stop();
 
@@ -1286,6 +1301,8 @@ Error Profiler::stop(bool restart) {
     if (_event_mask & EM_LOCK) lock_tracer.stop();
     if (_event_mask & EM_ALLOC) _alloc_engine->stop();
     if (_event_mask & EM_NATIVEMEM) malloc_tracer.stop();
+    // todo: uncomment
+    //    if (_event_mask & EM_PROC) proc_tracer.stop();
 
     _engine->stop();
 
@@ -1314,6 +1331,8 @@ Error Profiler::stop(bool restart) {
 }
 
 Error Profiler::check(Arguments& args) {
+    fprintf(stderr, "Profiler::check %s\n", args._event);
+
     MutexLocker ml(_state_lock);
     if (_state > IDLE) {
         return Error("Profiler already started");
@@ -1334,6 +1353,9 @@ Error Profiler::check(Arguments& args) {
     }
     if (!error && args._lock >= 0) {
         error = lock_tracer.check(args);
+    }
+    if (!error && args._proc >= 0) {
+      error = proc_recorder.check(args);
     }
 
     if (!error) {
