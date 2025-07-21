@@ -4,7 +4,7 @@
  */
 #include <cstdio>
 #include <pthread.h>
-#include "proc_recorder.h"
+#include "procRecorder.h"
 #include "os.h"
 #include "log.h"
 #include "profiler.h"

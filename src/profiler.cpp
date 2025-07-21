@@ -20,7 +20,7 @@
 #include "mallocTracer.h"
 #include "lockTracer.h"
 #include "wallClock.h"
-#include "proc_recorder.h"
+#include "procRecorder.h"
 #include "j9ObjectSampler.h"
 #include "j9StackTraces.h"
 #include "j9WallClock.h"

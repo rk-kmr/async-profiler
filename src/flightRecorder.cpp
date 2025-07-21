@@ -17,7 +17,7 @@
 #include <unistd.h>
 #include "demangle.h"
 #include "flightRecorder.h"
-#include "proc_recorder.h"
+#include "procRecorder.h"
 #include "incbin.h"
 #include "jfrMetadata.h"
 #include "dictionary.h"
