@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include "demangle.h"
 #include "flightRecorder.h"
+#include "proc_recorder.h"
 #include "incbin.h"
 #include "jfrMetadata.h"
 #include "dictionary.h"
@@ -1294,6 +1295,31 @@ class Recording {
         buf->putVar32(start, buf->offset() - start);
     }
 
+    void recordProcessSample(Buffer* buf, int tid, ProcessEvent* event) {
+        int start = buf->skip(1);
+        buf->put8(T_PROCESS_METRICS);
+        buf->putVar64(OS::nanotime()); // startTime - current timestamp
+        buf->putVar32(event->_data->pid);
+        buf->putVar32(event->_data->ppid);
+        buf->putUtf8(event->_data->name);
+        buf->putVar32(event->_data->uid);
+        buf->putVar64(event->_data->startTime); // startTimeProcess
+        buf->put8(event->_data->state);
+        buf->putVar64(event->_data->cpuUser);
+        buf->putVar64(event->_data->cpuSystem);
+        buf->putFloat(event->_data->cpuPercent);
+        buf->putVar32(event->_data->threads);
+        buf->putVar64(event->_data->memSize * OS::page_size); // Convert pages to bytes
+        buf->putVar64(event->_data->memResident * OS::page_size); // Convert pages to bytes
+        buf->putVar64(event->_data->memShared * OS::page_size); // Convert pages to bytes
+        buf->putVar64(event->_data->memText * OS::page_size); // Convert pages to bytes
+        buf->putVar64(event->_data->memData * OS::page_size); // Convert pages to bytes
+        buf->putVar64(event->_data->ioRead);
+        buf->putVar64(event->_data->ioWrite);
+        buf->putVar32(event->_data->fds);
+        buf->put8(start, buf->offset() - start);
+    }
+
     void recordLiveObject(Buffer* buf, int tid, u32 call_trace_id, LiveObject* event) {
         int start = buf->skip(1);
         buf->put8(T_LIVE_OBJECT);
@@ -1575,6 +1601,9 @@ void FlightRecorder::recordEvent(int lock_index, int tid, u32 call_trace_id,
             case USER_EVENT:
                 _rec->recordUserEvent(buf, tid, (UserEvent*)event);
                 break;
+            case PROCESS_SAMPLE:
+                _rec->recordProcessSample(buf, tid, (ProcessEvent*)event);
+                break;
         }
         _rec->flushIfNeeded(buf);
         _rec->addThread(tid);
@@ -1600,4 +1629,13 @@ void FlightRecorder::recordLog(LogLevel level, const char* message, size_t len) 
     _rec->flush(buf);
 
     _rec_lock.unlockShared();
+}
+
+void FlightRecorder::recordProcessSample(const ProcessData* data) {
+    if (!active()) {
+        return;
+    }
+
+    ProcessEvent event(data);
+    recordEvent(0, 0, 0, PROCESS_SAMPLE, &event);
 }

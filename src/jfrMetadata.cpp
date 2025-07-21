@@ -256,6 +256,28 @@ JfrMetadata::JfrMetadata() : Element("root") {
                 // when encountering a T_BYTE/F_ARRAY.
                 << field("data", T_STRING, "User Data"))
 
+            << (type("profiler.ProcessMetrics", T_PROCESS_METRICS, "Process Resource Usage")
+                << category("System", "Process")
+                << field("startTime", T_LONG, "Start Time", F_TIME_TICKS)
+                << field("pid", T_INT, "Process ID")
+                << field("ppid", T_INT, "Parent Process ID")
+                << field("name", T_STRING, "Process Name")
+                << field("uid", T_INT, "User ID")
+                << field("startTimeProcess", T_LONG, "Process Start Time", F_TIME_TICKS)
+                << field("state", T_BYTE, "Process State")
+                << field("cpuUser", T_LONG, "User CPU Time", F_TIME_TICKS)
+                << field("cpuSystem", T_LONG, "System CPU Time", F_TIME_TICKS)
+                << field("cpuPercent", T_FLOAT, "CPU Utilization Percentage", F_PERCENTAGE)
+                << field("threads", T_SHORT, "Thread Count")
+                << field("memSize", T_LONG, "Virtual Memory Size", F_BYTES)
+                << field("memResident", T_LONG, "Resident Memory Size", F_BYTES)
+                << field("memShared", T_LONG, "Shared Memory Size", F_BYTES)
+                << field("memText", T_LONG, "Text Memory Size", F_BYTES)
+                << field("memData", T_LONG, "Data Memory Size", F_BYTES)
+                << field("ioRead", T_LONG, "I/O Bytes Read", F_BYTES)
+                << field("ioWrite", T_LONG, "I/O Bytes Written", F_BYTES)
+                << field("fds", T_SHORT, "File Descriptor Count"))
+
             << (type("jdk.jfr.Label", T_LABEL, NULL)
                 << field("value", T_STRING))
 

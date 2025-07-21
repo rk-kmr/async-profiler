@@ -10,6 +10,9 @@
 #include "asprof.h"
 #include "os.h"
 
+// Forward declaration
+struct ProcessData;
+
 
 // The order is important: look for event_type comparison
 enum EventType {
@@ -25,6 +28,7 @@ enum EventType {
     PARK_SAMPLE,
     PROFILING_WINDOW,
     USER_EVENT,
+    PROCESS_SAMPLE,
 };
 
 class Event {
@@ -91,6 +95,13 @@ class UserEvent : public Event {
     asprof_jfr_event_key _type;
     const uint8_t* _data;
     size_t _len;
+};
+
+class ProcessEvent : public Event {
+  public:
+    const ProcessData* _data;
+
+    ProcessEvent(const ProcessData* data) : _data(data) {}
 };
 
 #endif // _EVENT_H

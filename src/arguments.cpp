@@ -59,6 +59,8 @@ static const Multiplier UNIVERSAL[] = {{'n', 1}, {'u', 1000}, {'m', 1000000}, {'
 //     alloc[=BYTES]    - profile allocations with BYTES interval
 //     live             - build allocation profile from live objects only
 //     lock[=DURATION]  - profile contended locks overflowing the DURATION ns bucket (default: 10us)
+//     proc             - profile system process metrics (Linux only)
+//     proc-interval=NS - process metrics collection interval in nanoseconds (default: 30s)
 //     wall[=NS]        - run wall clock profiling together with CPU profiling
 //     nobatch          - legacy wall clock sampling without batch events
 //     collapsed        - dump collapsed stacks (the format used by FlameGraph script)
@@ -267,6 +269,9 @@ Error Arguments::parse(const char* args) {
 
             CASE("proc")
                 _proc = 1;
+
+            CASE("proc-interval")
+                _proc_interval = value == NULL ? DEFAULT_PROC_RECORD_INTERVAL : parseUnits(value, NANOS);
 
             CASE("wall")
                 _wall = value == NULL ? 0 : parseUnits(value, NANOS);

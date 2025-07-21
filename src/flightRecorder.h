@@ -38,6 +38,9 @@ class FlightRecorder {
                      EventType event_type, Event* event);
 
     void recordLog(LogLevel level, const char* message, size_t len);
+
+    //todo: other record* functions are not defined in .h file check if this is needed
+    void recordProcessSample(const ProcessData* data);
 };
 
 #endif // _FLIGHTRECORDER_H
