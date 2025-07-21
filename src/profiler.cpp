@@ -998,8 +998,6 @@ bool Profiler::excludeTrace(FrameName* fn, CallTrace* trace) {
 }
 
 Engine* Profiler::selectEngine(const char* event_name) {
-    fprintf(stderr, "selectEngine %s\n", event_name);
-
     if (event_name == NULL) {
         return &noop_engine;
     } else if (strcmp(event_name, EVENT_CPU) == 0) {
@@ -1047,6 +1045,8 @@ Engine* Profiler::activeEngine() {
             return &wall_clock;
         case EM_NATIVEMEM:
             return &malloc_tracer;
+        case EM_PROC:
+            return &proc_recorder;
         default:
             return _engine;
     }
@@ -1078,8 +1078,6 @@ Error Profiler::checkJvmCapabilities() {
 }
 
 Error Profiler::start(Arguments& args, bool reset) {
-    fprintf(stderr, "Profiler::start %s\n", args._event);
-
     MutexLocker ml(_state_lock);
     if (_state > IDLE) {
         return Error("Profiler already started");
