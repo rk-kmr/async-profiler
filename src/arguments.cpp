@@ -237,7 +237,7 @@ Error Arguments::parse(const char* args) {
                 } else if (strcmp(value, EVENT_LOCK) == 0) {
                     if (_lock < 0) _lock = DEFAULT_LOCK_INTERVAL;
                 } else if (strcmp(value, EVENT_PROC) == 0) {
-                    if (_proc < 0) _proc = 1;
+                    if (_proc < 0) _proc = DEFAULT_PROC_RECORD_INTERVAL;
                 } else if (_event != NULL && !_all) {
                     msg = "Duplicate event argument";
                 } else {
@@ -268,10 +268,7 @@ Error Arguments::parse(const char* args) {
                 _lock = value == NULL ? DEFAULT_LOCK_INTERVAL : parseUnits(value, NANOS);
 
             CASE("proc")
-                _proc = 1;
-
-            CASE("proc-interval")
-                _proc_interval = value == NULL ? DEFAULT_PROC_RECORD_INTERVAL : parseUnits(value, NANOS);
+                _proc = value == NULL ? DEFAULT_PROC_RECORD_INTERVAL : parseUnits(value, NANOS);
 
             CASE("wall")
                 _wall = value == NULL ? 0 : parseUnits(value, NANOS);
@@ -299,7 +296,7 @@ Error Arguments::parse(const char* args) {
                     _nativemem = DEFAULT_ALLOC_INTERVAL;
                 }
                 if (_proc < 0) {
-                    _proc = 1;
+                    _proc = DEFAULT_PROC_RECORD_INTERVAL;
                 }
                 if (_event == NULL && OS::isLinux()) {
                     _event = EVENT_CPU;

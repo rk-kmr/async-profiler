@@ -5,12 +5,13 @@
 #include <cstdio>
 #include <pthread.h>
 #include "procRecorder.h"
+#include "arguments.h"
 #include "os.h"
 #include "log.h"
 #include "profiler.h"
 
 volatile bool ProcRecorder::_running = false;
-int ProcRecorder::_interval = 30000; // Default 30 seconds.
+long ProcRecorder::_interval = DEFAULT_PROC_RECORD_INTERVAL;
 
 Error ProcRecorder::check(Arguments& args) {
     // Check if process profiling is supported on this platform
@@ -26,20 +27,11 @@ Error ProcRecorder::check(Arguments& args) {
 }
 
 Error ProcRecorder::start(Arguments& args) {
-    // Double-check platform support (safety net)
 #ifndef __linux__
     return Error("Process metrics collection is only supported on Linux");
 #endif
-
-    Log::info("Starting process metrics collection");
-
-    // Set collection interval from arguments (convert nanoseconds to milliseconds)
-    _interval = (int)(args._proc_interval / 1000000);  // Convert ns to ms
-    if (_interval < 1000) {
-        _interval = 1000;  // Minimum 1 second
-    }
-
-    Log::info("Process metrics collection interval set to %d ms", _interval);
+    _interval = args._proc > 0 ? args._proc : 0;
+    Log::info("Process metrics collection interval set to %ld ns", _interval);
 
     _running = true;
 
@@ -80,12 +72,10 @@ void ProcRecorder::timerLoop() {
         // Collect process metrics
         collectProcessMetrics();
 
-        // Only sleep if we're still running
         if (_running) {
-            fprintf(stderr, "[PROC] Sleeping for %d ms\n", _interval);
-            // Sleep for the specified interval
-            // Convert milliseconds to nanoseconds for OS::sleep
-            OS::sleep((u64)_interval * 1000000);
+            fprintf(stderr, "[PROC] Sleeping for %ld ms\n", _interval);
+
+            OS::sleep(_interval);
         }
     }
 
@@ -133,14 +123,14 @@ void ProcRecorder::collectProcessMetrics() {
         if (readProcessData(pid, &data)) {
             successful_reads++;
 
-            // Log to stderr for debugging (now includes CPU percentage)
-            fprintf(stderr, "[PROC] PID: %d, Name: %s, PPID: %d, State: %c, "
-                           "CPU(U/S): %lu/%lu, CPU%%: %.2f%%, Mem(Size/Res/Shared): %lu/%lu/%lu pages, "
-                           "I/O(R/W): %lu/%lu bytes, Threads: %d, FDs: %d\n",
-                   data.pid, data.name, data.ppid, (char)data.state,
-                   data.cpuUser, data.cpuSystem, data.cpuPercent,
-                   data.memSize, data.memResident, data.memShared,
-                   data.ioRead, data.ioWrite, data.threads, data.fds);
+            // // Log to stderr for debugging (now includes CPU percentage)
+            // fprintf(stderr, "[PROC] PID: %d, Name: %s, PPID: %d, State: %c, "
+            //                "CPU(U/S): %lu/%lu, CPU%%: %.2f%%, Mem(Size/Res/Shared): %lu/%lu/%lu pages, "
+            //                "I/O(R/W): %lu/%lu bytes, Threads: %d, FDs: %d\n",
+            //        data.pid, data.name, data.ppid, (char)data.state,
+            //        data.cpuUser, data.cpuSystem, data.cpuPercent,
+            //        data.memSize, data.memResident, data.memShared,
+            //        data.ioRead, data.ioWrite, data.threads, data.fds);
 
             // Record to JFR if profiler is available
             if (jfr_active) {

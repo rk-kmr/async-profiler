@@ -61,7 +61,7 @@ struct ProcessData {
 class ProcRecorder : public Engine {
   private:
     static volatile bool _running;
-    static int _interval;  // Collection interval in milliseconds
+    static long _interval;  // Collection interval in milliseconds
 
     pthread_t _timer_thread;
 
