@@ -106,7 +106,9 @@ class CodeCache {
     short _lib_index;
     const void* _min_address;
     const void* _max_address;
+public:
     const char* _text_base;
+private:
     const char* _image_base;
 
     unsigned int _plt_offset;

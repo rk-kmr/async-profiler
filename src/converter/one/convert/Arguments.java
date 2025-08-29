@@ -17,6 +17,7 @@ public class Arguments {
     public String state;
     public Pattern include;
     public Pattern exclude;
+    public String execPath;
     public double minwidth;
     public double grain;
     public double tail = 0.1;

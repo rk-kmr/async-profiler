@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/param.h>
+#include <time.h>
 #include "index.h"
 #include "profiler.h"
 #include "perfEvents.h"
@@ -341,7 +342,14 @@ int Profiler::convertNativeTrace(int native_frames, const void** callchain, ASGC
     jmethodID prev_method = NULL;
 
     for (int i = 0; i < native_frames; i++) {
+        CodeCache* cc = findLibraryByAddress(callchain[i]);
         const char* current_method_name = findNativeMethod(callchain[i]);
+        if (cc) {
+              frames[depth].bci = BCI_ADDRESS;
+              frames[depth].method_id = (jmethodID)((uintptr_t)callchain[i] - ((uintptr_t)cc->_text_base + 6));
+                depth++;
+        }
+
         char mark;
         if (current_method_name != NULL && (mark = NativeFunc::mark(current_method_name)) != 0) {
             if (mark == MARK_VM_RUNTIME && event_type >= ALLOC_SAMPLE) {

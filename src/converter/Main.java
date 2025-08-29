@@ -117,6 +117,7 @@ public class Main {
                 "     --dot              Dotted class names\n" +
                 "     --from TIME        Start time in ms (absolute or relative)\n" +
                 "     --to TIME          End time in ms (absolute or relative)\n" +
+                "     --exec             Executable binary"+
                 "\n" +
                 "Flame Graph options:\n" +
                 "     --title STRING     Flame Graph title\n" +

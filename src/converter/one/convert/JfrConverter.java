@@ -144,7 +144,15 @@ public abstract class JfrConverter extends Classifier {
         byte[] methodName = jfr.symbols.get(method.name);
 
         if (className == null || className.length == 0 || isNativeFrame(methodType)) {
-            return new String(methodName, StandardCharsets.UTF_8);
+            String methodNameStr = new String(methodName, StandardCharsets.UTF_8);
+//            System.out.println("resolving native frame " + methodNameStr);
+            if (methodNameStr.startsWith("0x") && args.execPath != null) {
+//                System.out.println("Resolving using add2line " + methodNameStr);
+                String resolvedMethodName = resolveNativeAddress(methodNameStr);
+                System.out.println("Resolved using add2line " + methodNameStr + " to " + resolvedMethodName);
+                return resolvedMethodName;
+            }
+            return methodNameStr;
         } else {
             String classStr = toJavaClassName(className, 0, args.dot);
             if (methodName == null || methodName.length == 0) {
@@ -282,6 +290,30 @@ public abstract class JfrConverter extends Classifier {
 
     // Select sum(samples) or sum(value) depending on the --total option.
     // For lock events, convert lock duration from ticks to nanoseconds.
+    private String resolveNativeAddress(String address) {
+        try {
+            Process process = new ProcessBuilder("addr2line", "-a", address, "-e", args.execPath)
+                    .redirectErrorStream(true)
+                    .start();
+            
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()))) {
+                String line = reader.readLine();
+                if (line != null && !line.contains("??") && !line.startsWith("0x")) {
+                    return line.trim();
+                }
+                line = reader.readLine();
+                if (line != null && !line.contains("??") && !line.startsWith("0x")) {
+                    return line.trim();
+                }
+            }
+            process.waitFor();
+        } catch (Exception e) {
+            // Fall back to original address if addr2line fails
+        }
+        return address;
+    }
+
     protected abstract class AggregatedEventVisitor implements EventCollector.Visitor {
         private final double factor = !args.total ? 0.0 : counterFactor();
 
